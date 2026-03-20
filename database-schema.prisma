@@ -1,0 +1,301 @@
+// Prisma Schema - 業務行動成效評估系統
+// 資料庫: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================
+// 核心資料模型
+// ================================
+
+// 用戶（業務人員）
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  name          String
+  role          UserRole @default(SALES)
+  team          String?
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  lastLogin     DateTime? @map("last_login")
+
+  // 關聯
+  customers     Customer[]
+  visits        Visit[]
+  contracts     Contract[]
+  performanceMetrics PerformanceMetric[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  SALES       // 業務人員
+  MANAGER     // 主管
+  ADMIN       // 系統管理員
+}
+
+// 客戶
+model Customer {
+  id              String   @id @default(uuid())
+  companyName     String   @map("company_name")
+  contactPerson   String?  @map("contact_person")
+  contactPhone    String?  @map("contact_phone")
+  contactEmail    String?  @map("contact_email")
+  website         String?
+
+  // 分類與評分
+  isAaCustomer    Boolean  @default(false) @map("is_aa_customer")
+  customerStage   CustomerStage? @map("customer_stage")
+  maturityScore   Int?     @map("maturity_score") // 0-100
+
+  // 基本資訊（來自一訪 A 類問題）
+  basicInfo       Json?    @map("basic_info")
+
+  // 業務狀態
+  currentStatus   CustomerStatus @default(CONTACTED) @map("current_status")
+
+  // 追蹤資訊
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String   @map("created_by")
+
+  // 關聯
+  creator         User     @relation(fields: [createdBy], references: [id])
+  visits          Visit[]
+  contracts       Contract[]
+
+  @@index([companyName])
+  @@index([isAaCustomer])
+  @@index([customerStage])
+  @@index([currentStatus])
+  @@map("customers")
+}
+
+enum CustomerStage {
+  INDIVIDUAL              // 個人戶
+  PREPARING_COMPANY       // 要準備成立公司
+  NEW_COMPANY            // 剛成立公司
+  SCALING_UP             // 物件量增加想數位升級
+}
+
+enum CustomerStatus {
+  CONTACTED              // 已接觸
+  FIRST_VISIT_SCHEDULED  // 已排程一訪
+  FIRST_VISIT_DONE       // 已完成一訪
+  SECOND_VISIT_SCHEDULED // 已排程二訪
+  SECOND_VISIT_DONE      // 已完成二訪
+  NEGOTIATING            // 洽談中
+  SIGNED                 // 已簽約
+  LOST                   // 未成交
+}
+
+// 拜訪記錄
+model Visit {
+  id              String   @id @default(uuid())
+  customerId      String   @map("customer_id")
+  visitType       VisitType @map("visit_type")
+  visitDate       DateTime @map("visit_date")
+  visitStatus     VisitStatus @map("visit_status")
+
+  // 一訪資料（JSON 格式儲存）
+  basicInfo       Json?    @map("basic_info")        // A 類：公司基本資料
+  propertyStatus  Json?    @map("property_status")   // B 類：物件狀態（一訪部分）
+
+  // 二訪資料（JSON 格式儲存）
+  developmentPlan Json?    @map("development_plan")  // B 類：發展方向（二訪部分）
+  businessStatus  Json?    @map("business_status")   // C 類：經營狀態
+  digitalization  Json?    @map("digitalization")    // D 類：數位化程度
+
+  // 痛點與需求分析
+  painPoints      String?  @map("pain_points") @db.Text
+  clientNeeds     String?  @map("client_needs") @db.Text
+
+  // 備註與下一步行動
+  notes           String?  @db.Text
+  nextAction      String?  @map("next_action")
+  nextVisitDate   DateTime? @map("next_visit_date")
+
+  // 追蹤資訊
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String   @map("created_by")
+
+  // 關聯
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  creator         User     @relation(fields: [createdBy], references: [id])
+
+  @@index([customerId])
+  @@index([visitDate])
+  @@index([visitStatus])
+  @@map("visits")
+}
+
+enum VisitType {
+  FIRST_VISIT     // 一訪
+  SECOND_VISIT    // 二訪
+  FOLLOW_UP       // 追蹤拜訪
+}
+
+enum VisitStatus {
+  SCHEDULED       // 已排程
+  COMPLETED       // 已完成
+  CANCELLED       // 已取消
+  RESCHEDULED     // 已改期
+}
+
+// 簽約記錄
+model Contract {
+  id              String   @id @default(uuid())
+  customerId      String   @map("customer_id")
+  visitId         String?  @map("visit_id")
+
+  contractDate    DateTime @map("contract_date")
+  contractType    ContractType @map("contract_type")
+  propertyCount   Int?     @map("property_count")
+  monthlyValue    Decimal? @map("monthly_value") @db.Decimal(10, 2)
+
+  // 導入 KPI 追蹤（基於「導入成功KPIs」工作表）
+  kpiPropertyUploadRate     Decimal? @map("kpi_property_upload_rate") @db.Decimal(5, 2)      // 物件上傳率 (%)
+  kpiContractCreationRate   Decimal? @map("kpi_contract_creation_rate") @db.Decimal(5, 2)    // 合約建立率 (%)
+  kpiBillingActive          Boolean  @default(false) @map("kpi_billing_active")              // 帳單已發送
+  kpiPaymentIntegrated      Boolean  @default(false) @map("kpi_payment_integrated")          // 金流串接
+  kpiNotificationSetup      Boolean  @default(false) @map("kpi_notification_setup")          // 自動通知
+  kpiSopEstablished         Boolean  @default(false) @map("kpi_sop_established")             // SOP 建立
+
+  // 導入狀態
+  onboardingSuccess Boolean  @default(false) @map("onboarding_success")
+  onboardingDate    DateTime? @map("onboarding_date")
+
+  // 追蹤資訊
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy       String   @map("created_by")
+
+  // 關聯
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  creator         User     @relation(fields: [createdBy], references: [id])
+
+  @@index([customerId])
+  @@index([contractDate])
+  @@map("contracts")
+}
+
+enum ContractType {
+  PACKAGE_RENTAL  // 包租
+  PROPERTY_MGMT   // 代管
+  SUBLEASE        // 代租
+  HYBRID          // 混合
+}
+
+// 業務績效指標（每日/每週/每月彙總）
+model PerformanceMetric {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  metricDate      DateTime @map("metric_date") @db.Date
+  metricPeriod    MetricPeriod @map("metric_period")
+
+  // 活動指標
+  totalVisits     Int      @default(0) @map("total_visits")
+  firstVisits     Int      @default(0) @map("first_visits")
+  secondVisits    Int      @default(0) @map("second_visits")
+  followUpVisits  Int      @default(0) @map("follow_up_visits")
+
+  // 結果指標
+  contractsSigned Int      @default(0) @map("contracts_signed")
+  aaCustomersAcquired Int  @default(0) @map("aa_customers_acquired")
+
+  // 轉換率（自動計算）
+  conversionRate  Decimal? @map("conversion_rate") @db.Decimal(5, 2)
+
+  // 追蹤資訊
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // 關聯
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, metricDate, metricPeriod])
+  @@index([metricDate])
+  @@map("performance_metrics")
+}
+
+enum MetricPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+// ================================
+// 系統設定與參考資料
+// ================================
+
+// 客戶健檢問卷範本（可自訂問題）
+model QuestionTemplate {
+  id              String   @id @default(uuid())
+  category        QuestionCategory
+  visitType       VisitType
+  priority        QuestionPriority
+  orderIndex      Int      @map("order_index")
+
+  questionText    String   @map("question_text") @db.Text
+  questionType    QuestionType @map("question_type")
+  options         Json?    // 選項（如果是選擇題）
+  isRequired      Boolean  @default(false) @map("is_required")
+
+  // 評分權重（用於計算成熟度評分）
+  scoreWeight     Decimal? @map("score_weight") @db.Decimal(5, 2)
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([category, visitType])
+  @@map("question_templates")
+}
+
+enum QuestionCategory {
+  A_BASIC_INFO        // A 類：公司基本資料
+  B_PROPERTY          // B 類：物件狀態與發展
+  C_BUSINESS          // C 類：經營狀態
+  D_DIGITAL           // D 類：數位化程度
+}
+
+enum QuestionPriority {
+  REQUIRED            // 必問
+  RECOMMENDED         // 建議
+  OPTIONAL            // 可選（Nice to have）
+}
+
+enum QuestionType {
+  TEXT                // 文字輸入
+  TEXTAREA            // 長文字
+  NUMBER              // 數字
+  SELECT              // 單選
+  MULTISELECT         // 多選
+  BOOLEAN             // 是非題
+  DATE                // 日期
+  URL                 // 網址
+}
+
+// AA 客戶判定條件（可設定）
+model AaCustomerCriteria {
+  id              String   @id @default(uuid())
+  name            String
+  description     String   @db.Text
+  conditionJson   Json     @map("condition_json") // 判定條件的 JSON 邏輯
+  isActive        Boolean  @default(true) @map("is_active")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("aa_customer_criteria")
+}
