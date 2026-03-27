@@ -1,0 +1,37 @@
+# ================================
+# 開發環境專用依賴
+# ================================
+
+# 包含生產環境依賴
+-r requirements.txt
+
+# 測試框架
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.26.0  # 用於測試 API
+
+# 代碼品質
+black==23.12.1  # 代碼格式化
+flake8==7.0.0  # 代碼檢查
+isort==5.13.2  # import 排序
+mypy==1.8.0  # 型別檢查
+pylint==3.0.3  # 代碼分析
+
+# 文件生成
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+
+# 開發工具
+ipython==8.19.0  # 增強的 Python shell
+ipdb==0.13.13  # 除錯工具
+watchdog==3.0.0  # 檔案監控（熱重載）
+
+# 資料庫工具
+faker==22.0.0  # 產生測試資料
+factory-boy==3.3.0  # 測試資料工廠
+
+# 效能分析
+py-spy==0.3.14
+memory-profiler==0.61.0

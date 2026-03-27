@@ -1,3 +1,162 @@
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Alembic
+alembic/versions/*.pyc
+
+# ================================
+# Node.js / Vue
+# ================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ================================
+# 環境變數與機密
+# ================================
+.env
+.env.local
+.env.*.local
 *.pem
 *.key
+*.crt
+secrets/
+credentials.json
+
+# ================================
+# Docker
+# ================================
+docker-compose.override.yml
+
+# ================================
+# 資料庫
+# ================================
+*.db
+*.sqlite
+*.sqlite3
+postgres_data/
+
+# ================================
+# 日誌
+# ================================
+*.log
+logs/
+*.log.*
+
+# ================================
+# 作業系統
+# ================================
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ================================
+# 備份與暫存
+# ================================
+*.bak
+*.swp
+*.swo
+*~
+.tmp/
+temp/
+tmp/
+
+# ================================
+# 測試
+# ================================
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# ================================
+# 上傳檔案
+# ================================
+uploads/
+media/
+
+# ================================
+# 其他
+# ================================
+.cache
+.parcel-cache
+.next
+out
+.nuxt
+.cache
+.vuepress/dist
+.serverless
+.fusebox
+.dynamodb
+.tern-port

@@ -1,0 +1,64 @@
+# ================================
+# FastAPI 後端核心依賴
+# Python 3.12+
+# ================================
+
+# Web 框架
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+gunicorn==21.2.0
+
+# 資料庫 ORM 與驅動
+sqlalchemy==2.0.25
+alembic==1.13.1
+asyncpg==0.29.0  # PostgreSQL async driver
+psycopg2-binary==2.9.9  # PostgreSQL sync driver
+
+# 資料驗證與序列化
+pydantic==2.5.3
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# 檔案上傳支援（如需上傳功能時使用）
+python-multipart==0.0.6
+
+# Redis (快取與會話)
+redis==5.0.1
+hiredis==2.3.2  # Redis 效能優化
+
+# HTTP 客戶端
+httpx==0.26.0
+aiohttp==3.9.1
+
+# 工具庫
+python-dotenv==1.0.0  # 環境變數管理
+pytz==2023.3.post1  # 時區處理
+
+# 日期時間
+python-dateutil==2.8.2
+
+# JSON 處理
+orjson==3.9.12  # 高性能 JSON
+
+# CORS
+fastapi-cors==0.0.6
+
+# 日誌
+loguru==0.7.2
+
+# 監控與錯誤追蹤 (選用)
+sentry-sdk[fastapi]==1.39.2
+
+# Excel 處理 (用於資料匯出)
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# 數據分析 (選用，用於進階分析功能)
+pandas==2.1.4
+numpy==1.26.3
+
+# 工具
+tenacity==8.2.3  # 重試機制
+
+# AI / LLM
+openai==1.12.0  # OpenAI API 客戶端
