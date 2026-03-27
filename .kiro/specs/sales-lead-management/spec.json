@@ -1,0 +1,23 @@
+{
+  "feature": "sales-lead-management",
+  "version": "1.0.0",
+  "language": "zh-TW",
+  "status": {
+    "phase": "implementation",
+    "requirements": "generated",
+    "design": "generated",
+    "tasks": "approved",
+    "implementation": "in_progress"
+  },
+  "metadata": {
+    "created_at": "2026-03-26T00:00:00Z",
+    "updated_at": "2026-03-27T15:10:00Z",
+    "description": "此系統需完成\n1.取得20220714_臉書廣告表單_20250502更新.xlsx 3特點輪播廣告 當中的名單 紀錄在系統裡\n2.用戶會通過此名單 聯絡上面的淺在客戶\n3.過程中產生文檔或綠音檔(我們為 JGB Smart Property 金箍棒智慧物管 可網路查詢我們的相關資料)可以用AI模擬出 我們的業務推銷給包租/代管 業者麽過程\n4.將錄音檔或文字稿 為給AI匹配 業務30問 5.00.8.3_導入顧問服務_業務30問_客戶健檢表 找出 AA客戶\n5.紀錄在 客戶30問健檢紀錄表 (回覆).xlsx 的格式"
+  },
+  "files": {
+    "requirements": "requirements.md",
+    "design": "design.md",
+    "tasks": "tasks.md",
+    "research": "research.md"
+  }
+}

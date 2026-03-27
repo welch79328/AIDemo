@@ -1,0 +1,23 @@
+{
+  "feature": "{{FEATURE_NAME}}",
+  "version": "1.0.0",
+  "language": "zh-TW",
+  "status": {
+    "phase": "requirements",
+    "requirements": "pending",
+    "design": "not_started",
+    "tasks": "not_started",
+    "implementation": "not_started"
+  },
+  "metadata": {
+    "created_at": "{{TIMESTAMP}}",
+    "updated_at": "{{TIMESTAMP}}",
+    "description": "{{PROJECT_DESCRIPTION}}"
+  },
+  "files": {
+    "requirements": "requirements.md",
+    "design": "design.md",
+    "tasks": "tasks.md",
+    "research": "research.md"
+  }
+}
