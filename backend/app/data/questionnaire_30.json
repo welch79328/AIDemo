@@ -1,0 +1,170 @@
+[
+  {
+    "number": 1,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "公司官網 FB 網站：",
+    "options": "N\nY, link: "
+  },
+  {
+    "number": 2,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "是否有用LINE個人/ LINE OA 管理租客",
+    "options": "No/ LINE個人/ LINE OA"
+  },
+  {
+    "number": 3,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "公司/ 品牌名稱：",
+    "options": null
+  },
+  {
+    "number": 4,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "公司/個人 經營階段：",
+    "options": "a個人戶/ b要準備成立公司/ c剛成立公司/ d物件量增加想數位升級"
+  },
+  {
+    "number": 5,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "公司老闆/集團背景：\n(當初怎麼會想經營包租代管這個行業？)",
+    "options": "a仲介/ b建設/ c家族or集團 / d室內裝修或工程/ e純包租代管or老闆創業 / f旅館短租起家/  g協槓兼職"
+  },
+  {
+    "number": 6,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "物件比例(包租 代管)",
+    "options": "我們系統可以自動產生合約，你們是以包租還是代管為主？"
+  },
+  {
+    "number": 7,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "客戶的案場規劃",
+    "options": "a共生宅/ b套雅房/ c整層/ d透套/ e共享辦公室&商務中心 "
+  },
+  {
+    "number": 8,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "公司分布地點\n(分布 總部)",
+    "options": "你們有經營其他縣市的物件嗎？(是否都要到現場抄表)\n你們物件都分布在哪些區域呢？"
+  },
+  {
+    "number": 9,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "是否有經營社宅",
+    "options": null
+  },
+  {
+    "number": 10,
+    "priority": "必",
+    "phase": "一訪",
+    "question": "客戶目前的難題，最優先想解決之痛點",
+    "options": "你們有希望系統化可以協助解決甚麼問題嗎？\n你們客戶都是同一天收款嗎？"
+  },
+  {
+    "number": 11,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "是否有規劃擴大營運嗎？(或著即將有新接案場)",
+    "options": "if yes, AA客戶"
+  },
+  {
+    "number": 12,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "公司/決策者之目標",
+    "options": "戶數增加/ 人員異動/ 人力減少"
+  },
+  {
+    "number": 13,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "公司組織人力數據(會計 業務 經理 )",
+    "options": "現在總戶數大概？公司總人數？人員怎麼分工的？"
+  },
+  {
+    "number": 14,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "(金流) 公司帳務方式(紙本 系統 外包會計人員)",
+    "options": "代管：可以問是否統一由公司先收帳？\n你們都怎麼收帳？有在使用虛擬帳戶嗎？是使用固定還是變動帳號？\n都由誰負責催款是秘書還是業務？是否有系統協助彙整帳單資料？"
+  },
+  {
+    "number": 15,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "(代管) 大房東數量",
+    "options": "你們現在需要同時跟幾位屋主回報？是否每個月需要製作損益表給大房東?\n\nif yes, AA客戶"
+  },
+  {
+    "number": 16,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "(包租) 是否大部分是包租物件? 每個月需要製作 \"差額發票\"",
+    "options": "(如果有100-200戶以上) if yes, AA客戶"
+  },
+  {
+    "number": 17,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "(租客) 取向(高資產 中資產 低資產 類型)",
+    "options": "最喜歡經營哪種租客？\n(可以從租金行情、房型延伸)"
+  },
+  {
+    "number": 18,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "(租客) 是否有外籍租客?",
+    "options": "if yes, AA客戶"
+  },
+  {
+    "number": 19,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "是否有會計部門?幾個人",
+    "options": null
+  },
+  {
+    "number": 20,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "公司作業方式(紙本 系統 )/ 是否有用其他協力系統?",
+    "options": "你們現在是用傳統 word,excel整理客戶資料跟製作合約嗎？"
+  },
+  {
+    "number": 21,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "是否有自己的官網 (是否有興趣花5000元製作一個形象官網，可以5種套版選一種)",
+    "options": null
+  },
+  {
+    "number": 22,
+    "priority": "必",
+    "phase": "二訪",
+    "question": "客戶目前的競品(相同性質)",
+    "options": "有了解過其他系統嗎？(飛豬、DDROOM、包管家)"
+  },
+  {
+    "number": 23,
+    "priority": "Nice",
+    "phase": "必",
+    "question": "LINE 拉群/ 唐三藏：",
+    "options": "Y/N"
+  },
+  {
+    "number": 24,
+    "priority": "Nice",
+    "phase": "必",
+    "question": "公司決策人員：",
+    "options": null
+  }
+]
