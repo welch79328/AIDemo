@@ -2,7 +2,10 @@ import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
 // API 基礎 URL
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
+// 空字串表示使用相對路徑（通過 Nginx 代理）
+const baseURL = import.meta.env.VITE_API_BASE_URL !== undefined
+  ? import.meta.env.VITE_API_BASE_URL
+  : 'http://localhost:8001'
 
 // 建立 axios 實例
 const http: AxiosInstance = axios.create({
