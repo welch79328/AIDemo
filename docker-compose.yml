@@ -56,8 +56,8 @@ services:
       # Redis 設定（可選）
       REDIS_URL: redis://redis:6379/0
 
-      # CORS 設定
-      CORS_ORIGINS: http://localhost:8087,http://localhost:8080,http://localhost:8081
+      # CORS 設定（使用 Nginx 反向代理時，請求來自同一 origin）
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8087,http://localhost:80,http://localhost:8001}
 
       # OpenAI API 設定
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -90,7 +90,7 @@ services:
     container_name: sales-frontend
     restart: unless-stopped
     environment:
-      VITE_API_BASE_URL: http://localhost:8001
+      VITE_API_BASE_URL: /api
       VITE_APP_TITLE: 業務行動成效評估系統
     ports:
       - "8087:5173"
