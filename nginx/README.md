@@ -2,64 +2,60 @@
 
 ## 架構說明
 
-使用 Nginx 作為反向代理，統一入口：
+使用 **Nginx Docker 容器**作為反向代理，統一入口（對外 8087 端口）：
 
 ```
-瀏覽器 → Nginx (Port 80)
-           ├─ / → Frontend (localhost:8087)
-           └─ /api → Backend (localhost:8001)
+瀏覽器 → Nginx 容器 (Port 8087)
+           ├─ / → Frontend 容器 (內部 5173)
+           └─ /api → Backend 容器 (內部 8000)
 ```
+
+所有服務都在 Docker Compose 中運行，通過 Docker 內部網路通訊。
+
+**優點：**
+- ✅ 對外統一使用 8087 端口（保持原有訪問方式）
+- ✅ Frontend 使用相對路徑 `/api`，無需配置 IP
+- ✅ 解決 CORS 跨域問題
+- ✅ Backend 容器不直接對外暴露，提升安全性
 
 ## 部署步驟
 
-### 1. 安裝 Nginx
+### 1. 啟動所有服務
 
 ```bash
-sudo apt update
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
+cd ~/AIDemo
+
+# 拉取最新代碼
+git pull origin main
+
+# 啟動所有容器（包含 Nginx）
+docker compose up -d
+
+# 查看服務狀態
+docker compose ps
 ```
 
-### 2. 部署配置檔案
+**就這麼簡單！** 不需要在宿主機安裝 Nginx。
 
-```bash
-# 複製配置檔到 Nginx 目錄
-sudo cp nginx/sales-app.conf /etc/nginx/sites-available/sales-app
-
-# 創建符號連結啟用網站
-sudo ln -s /etc/nginx/sites-available/sales-app /etc/nginx/sites-enabled/
-
-# 刪除預設配置（避免衝突）
-sudo rm -f /etc/nginx/sites-enabled/default
-
-# 測試配置
-sudo nginx -t
-
-# 重新載入 Nginx
-sudo systemctl reload nginx
-```
-
-### 3. 配置防火牆/安全組
+### 2. 配置防火牆/安全組
 
 只需開啟以下端口：
-- ✅ **Port 80** - HTTP (必須)
+- ✅ **Port 8087** - Nginx 入口（必須）
 - ✅ **Port 22** - SSH (管理用)
-- ✅ **Port 443** - HTTPS (如果使用 SSL)
 
-可以關閉：
-- ❌ Port 8087 (Frontend，已由 Nginx 代理)
-- ❌ Port 8001 (Backend，已由 Nginx 代理)
-- ❌ Port 8080 (Adminer，安全考量)
+可以關閉（可選，提升安全性）：
+- ❌ Port 8001 (Backend，已由 Nginx 代理，無需直接對外)
+- ❌ Port 5173 (Frontend，已由 Nginx 代理，無需直接對外)
+- ❌ Port 8080 (Adminer，生產環境建議關閉)
 
-### 4. 驗證部署
+### 3. 驗證部署
 
 ```bash
 # 測試 Frontend
 curl http://localhost/
 
 # 測試 Backend API
-curl http://localhost/api/v1/customers
+curl http://localhost/api/v1/leads/import/history
 
 # 測試 API 文檔
 curl http://localhost/docs
