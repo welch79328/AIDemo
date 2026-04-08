@@ -443,62 +443,211 @@
       </template>
     </el-dialog>
 
-    <!-- AI 對談匯入對話框 -->
+    <!-- AI 對談匯入對話框（兩步驟） -->
     <el-dialog
       v-model="showConversationImport"
-      title="匯入對談記錄 - AI 智能填寫問卷"
-      width="700px"
+      :title="aiStep === 'input' ? '匯入對談記錄 - AI 智能填寫問卷' : 'AI 分析結果預覽'"
+      :width="aiStep === 'input' ? '700px' : '900px'"
       :close-on-click-modal="false"
+      @close="handleAIDialogClose"
     >
-      <el-alert
-        title="如何使用"
-        type="info"
-        :closable="false"
-        style="margin-bottom: 15px;"
-      >
-        <div>1. 貼上或上傳拜訪對談記錄</div>
-        <div>2. 點擊「AI 分析」按鈕</div>
-        <div>3. AI 將自動分析對談並填入問卷答案</div>
-      </el-alert>
+      <!-- Step 1: 輸入 -->
+      <div v-if="aiStep === 'input'">
+        <el-alert
+          title="如何使用"
+          type="info"
+          :closable="false"
+          style="margin-bottom: 15px;"
+        >
+          <div>1. 貼上或上傳拜訪對談記錄</div>
+          <div>2. 點擊「AI 分析」按鈕</div>
+          <div>3. 預覽分析結果後，勾選要填入的項目</div>
+        </el-alert>
 
-      <!-- 對談輸入 -->
-      <el-input
-        v-model="conversationText"
-        type="textarea"
-        :rows="12"
-        placeholder="請貼上對談記錄...&#10;&#10;範例：&#10;你&#10; 你們現在大概幾間啊？&#10;業者&#10; 一百多。"
-      />
+        <el-input
+          v-model="conversationText"
+          type="textarea"
+          :rows="12"
+          placeholder="請貼上對談記錄...&#10;&#10;範例：&#10;你&#10; 你們現在大概幾間啊？&#10;業者&#10; 一百多。"
+        />
 
-      <el-divider>或</el-divider>
+        <el-divider>或</el-divider>
 
-      <!-- 文件上傳 -->
-      <el-upload
-        class="upload-demo"
-        drag
-        :auto-upload="false"
-        :on-change="handleConversationFileChange"
-        :show-file-list="false"
-        accept=".txt"
-      >
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">
-          拖曳文件或<em>點擊上傳</em>
-        </div>
-        <template #tip>
-          <div class="el-upload__tip">支援 .txt 文件</div>
-        </template>
-      </el-upload>
+        <el-upload
+          class="upload-demo"
+          drag
+          :auto-upload="false"
+          :on-change="handleConversationFileChange"
+          :show-file-list="false"
+          accept=".txt"
+        >
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">
+            拖曳文件或<em>點擊上傳</em>
+          </div>
+          <template #tip>
+            <div class="el-upload__tip">支援 .txt 文件</div>
+          </template>
+        </el-upload>
+      </div>
+
+      <!-- Step 2: 結果預覽 -->
+      <div v-else-if="aiStep === 'result'" class="ai-result-preview">
+        <!-- 摘要 -->
+        <el-card shadow="never" style="margin-bottom: 16px;">
+          <template #header>
+            <span style="font-weight: bold;">📊 分析摘要</span>
+          </template>
+          <p style="margin: 0; color: #606266; line-height: 1.6;">{{ aiResultCache?.summary }}</p>
+        </el-card>
+
+        <!-- AA 客戶評估 -->
+        <el-card v-if="aiStore.aaAssessment" shadow="never" style="margin-bottom: 16px;">
+          <template #header>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-weight: bold;">⭐ AA 客戶評估</span>
+              <el-tag :type="aiStore.aaAssessment.is_aa_customer ? 'success' : 'info'" size="large">
+                {{ aiStore.aaAssessment.is_aa_customer ? 'AA 客戶' : '非 AA 客戶' }}
+              </el-tag>
+            </div>
+          </template>
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <div style="text-align: center;">
+                <div style="color: #909399; margin-bottom: 8px;">評分</div>
+                <el-progress
+                  type="circle"
+                  :width="80"
+                  :percentage="aiStore.aaAssessment.score"
+                  :color="getAAScoreColor(aiStore.aaAssessment.score)"
+                />
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div style="text-align: center;">
+                <div style="color: #909399; margin-bottom: 8px;">信心度</div>
+                <el-progress
+                  type="circle"
+                  :width="80"
+                  :percentage="aiStore.aaAssessment.confidence"
+                  color="#409eff"
+                />
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div style="padding-top: 8px;">
+                <div style="color: #909399; margin-bottom: 8px;">判定原因</div>
+                <ul style="margin: 0; padding-left: 16px; font-size: 13px; color: #606266;">
+                  <li v-for="(reason, idx) in aiStore.aaAssessment.reasons" :key="idx">{{ reason }}</li>
+                </ul>
+              </div>
+            </el-col>
+          </el-row>
+        </el-card>
+
+        <!-- 客戶資訊 -->
+        <el-card v-if="aiResultCache?.customer_info" shadow="never" style="margin-bottom: 16px;">
+          <template #header>
+            <span style="font-weight: bold;">👤 客戶基本資訊</span>
+          </template>
+          <el-descriptions :column="2" border size="small">
+            <el-descriptions-item label="公司名稱">
+              {{ aiResultCache.customer_info.company_name || '未提及' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="業務類型">
+              {{ aiResultCache.customer_info.business_type || '未知' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="物件數量">
+              <el-tag v-if="aiResultCache.customer_info.property_count" type="success">
+                {{ aiResultCache.customer_info.property_count }} 間
+              </el-tag>
+              <span v-else>未提及</span>
+            </el-descriptions-item>
+            <el-descriptions-item label="人員數量">
+              <el-tag v-if="aiResultCache.customer_info.staff_count" type="info">
+                {{ aiResultCache.customer_info.staff_count }} 人
+              </el-tag>
+              <span v-else>未提及</span>
+            </el-descriptions-item>
+          </el-descriptions>
+          <div v-if="aiResultCache.customer_info.pain_points?.length" style="margin-top: 12px;">
+            <span style="color: #909399; font-size: 13px;">痛點：</span>
+            <el-tag
+              v-for="(point, idx) in aiResultCache.customer_info.pain_points"
+              :key="idx"
+              type="warning"
+              size="small"
+              style="margin: 4px;"
+            >{{ point }}</el-tag>
+          </div>
+        </el-card>
+
+        <!-- 匹配問題（可勾選） -->
+        <el-card shadow="never">
+          <template #header>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-weight: bold;">✅ 匹配的問卷問題</span>
+              <div>
+                <el-button size="small" @click="toggleAllQuestions(true)">全選</el-button>
+                <el-button size="small" @click="toggleAllQuestions(false)">取消全選</el-button>
+                <el-tag type="success" style="margin-left: 8px;">
+                  {{ selectedQuestionIndices.length }} / {{ aiResultCache?.matched_questions.length }} 題
+                </el-tag>
+              </div>
+            </div>
+          </template>
+          <el-table
+            :data="aiResultCache?.matched_questions || []"
+            style="width: 100%"
+            max-height="400"
+            @selection-change="handleQuestionSelectionChange"
+            ref="questionTableRef"
+          >
+            <el-table-column type="selection" width="45" />
+            <el-table-column label="題號" width="65">
+              <template #default="{ row }">
+                <el-tag size="small">Q{{ row.question_number }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="問題" prop="question_text" min-width="200" show-overflow-tooltip />
+            <el-table-column label="答案" prop="answer" min-width="180" show-overflow-tooltip />
+            <el-table-column label="信心度" width="100" sortable>
+              <template #default="{ row }">
+                <el-tag
+                  :type="row.confidence >= 80 ? 'success' : row.confidence >= 50 ? 'warning' : 'danger'"
+                  size="small"
+                >
+                  {{ row.confidence }}%
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="證據" prop="evidence" min-width="150" show-overflow-tooltip />
+          </el-table>
+        </el-card>
+      </div>
 
       <template #footer>
-        <el-button @click="showConversationImport = false">取消</el-button>
-        <el-button
-          type="primary"
-          @click="handleAIAnalyze"
-          :loading="aiAnalyzing"
-        >
-          <el-icon><MagicStick /></el-icon>
-          AI 分析並填入問卷
-        </el-button>
+        <template v-if="aiStep === 'input'">
+          <el-button @click="showConversationImport = false">取消</el-button>
+          <el-button
+            type="primary"
+            @click="handleAIAnalyze"
+            :loading="aiAnalyzing"
+          >
+            <el-icon><MagicStick /></el-icon>
+            AI 分析
+          </el-button>
+        </template>
+        <template v-else>
+          <el-button @click="aiStep = 'input'">返回修改</el-button>
+          <el-button @click="showConversationImport = false">取消</el-button>
+          <el-button
+            type="primary"
+            @click="handleConfirmImport"
+          >
+            確認填入問卷（{{ selectedQuestionIndices.length }} 題）
+          </el-button>
+        </template>
       </template>
     </el-dialog>
   </div>
@@ -537,10 +686,14 @@ const dialogTitle = ref('新增拜訪記錄')
 const dialogMode = ref<'create' | 'edit'>('create')
 const currentEditId = ref('')
 
-// AI 對談匯入
+// AI 對談匯入（兩步驟）
 const showConversationImport = ref(false)
 const conversationText = ref('')
 const aiAnalyzing = ref(false)
+const aiStep = ref<'input' | 'result'>('input')
+const aiResultCache = ref<any>(null)
+const selectedQuestionIndices = ref<any[]>([])
+const questionTableRef = ref<any>(null)
 
 // 表單
 const formRef = ref<FormInstance>()
@@ -875,27 +1028,75 @@ async function handleAIAnalyze() {
 
   aiAnalyzing.value = true
   try {
-    // 調用 AI 分析
+    // 調用 AI 分析（不自動填入，先顯示結果）
     const result = await aiStore.analyzeConversation(conversationText.value)
+    aiResultCache.value = result
 
-    // 將 AI 分析結果映射到問卷表單
-    if (result.matched_questions && result.matched_questions.length > 0) {
-      mapAIResultToQuestionnaire(result.matched_questions)
-    }
+    // 切換到結果預覽步驟
+    aiStep.value = 'result'
 
-    // 如果有客戶資訊，也填入表單
-    if (result.customer_info) {
-      fillCustomerInfo(result.customer_info)
-    }
+    // 預設全選所有匹配問題
+    setTimeout(() => {
+      if (questionTableRef.value) {
+        result.matched_questions.forEach((row: any) => {
+          questionTableRef.value.toggleRowSelection(row, true)
+        })
+      }
+    }, 100)
 
-    ElMessage.success(`AI 分析完成！已匹配 ${result.matched_questions.length} 個問題`)
-    showConversationImport.value = false
-    conversationText.value = ''
+    ElMessage.success(`AI 分析完成！匹配 ${result.matched_questions.length} 個問題，請確認後填入`)
   } catch (error) {
     ElMessage.error('AI 分析失敗，請稍後再試')
   } finally {
     aiAnalyzing.value = false
   }
+}
+
+// 確認填入選取的問題
+function handleConfirmImport() {
+  if (selectedQuestionIndices.value.length > 0) {
+    mapAIResultToQuestionnaire(selectedQuestionIndices.value)
+  }
+
+  // 填入客戶基本資訊
+  if (aiResultCache.value?.customer_info) {
+    fillCustomerInfo(aiResultCache.value.customer_info)
+  }
+
+  ElMessage.success(`已填入 ${selectedQuestionIndices.value.length} 個問題的答案`)
+  showConversationImport.value = false
+}
+
+// 問題勾選變更
+function handleQuestionSelectionChange(selection: any[]) {
+  selectedQuestionIndices.value = selection
+}
+
+// 全選 / 取消全選
+function toggleAllQuestions(selectAll: boolean) {
+  if (!questionTableRef.value || !aiResultCache.value?.matched_questions) return
+  if (selectAll) {
+    aiResultCache.value.matched_questions.forEach((row: any) => {
+      questionTableRef.value.toggleRowSelection(row, true)
+    })
+  } else {
+    questionTableRef.value.clearSelection()
+  }
+}
+
+// AA 評估分數顏色
+function getAAScoreColor(score: number): string {
+  if (score >= 80) return '#67c23a'
+  if (score >= 60) return '#e6a23c'
+  return '#f56c6c'
+}
+
+// AI 對話框關閉時重置
+function handleAIDialogClose() {
+  aiStep.value = 'input'
+  aiResultCache.value = null
+  selectedQuestionIndices.value = []
+  conversationText.value = ''
 }
 
 // 將 AI 分析結果映射到問卷表單（根據問題文本智能判斷）

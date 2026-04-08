@@ -119,7 +119,7 @@ class ImportHistoryResponse(BaseModel):
     total: int = Field(..., description="總筆數", ge=0)
     page: int = Field(..., description="當前頁碼", ge=1)
     limit: int = Field(..., description="每頁筆數", ge=1)
-    total_pages: int = Field(..., description="總頁數", ge=1)
+    total_pages: int = Field(..., description="總頁數", ge=0)
 
     model_config = ConfigDict(
         json_schema_extra={
