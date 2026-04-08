@@ -10,7 +10,7 @@ const baseURL = import.meta.env.VITE_API_BASE_URL !== undefined
 // 建立 axios 實例
 const http: AxiosInstance = axios.create({
   baseURL,
-  timeout: 30000,
+  timeout: 180000,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -162,7 +162,7 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="120px"
+        label-position="top"
       >
         <el-form-item label="客戶" prop="customer_id">
           <el-select v-model="formData.customer_id" placeholder="請選擇客戶" filterable>
@@ -318,17 +318,15 @@
           </el-form-item>
 
           <el-form-item label="13. 公司組織人力數據(會計 業務 經理)">
-            <el-row :gutter="10">
-              <el-col :span="8">
+            <el-row :gutter="10" style="margin-bottom: 8px;">
+              <el-col :span="12">
                 <el-input v-model="questionnaireForm.q13_total_properties" placeholder="總戶數" />
               </el-col>
-              <el-col :span="8">
+              <el-col :span="12">
                 <el-input v-model="questionnaireForm.q13_total_staff" placeholder="總人數" />
               </el-col>
-              <el-col :span="8">
-                <el-input v-model="questionnaireForm.q13_staff_division" placeholder="人員分工" />
-              </el-col>
             </el-row>
+            <el-input v-model="questionnaireForm.q13_staff_division" placeholder="人員分工說明" />
           </el-form-item>
 
           <el-form-item label="14. (金流) 公司帳務方式(紙本 系統 外包會計人員)">
@@ -1099,218 +1097,257 @@ function handleAIDialogClose() {
   conversationText.value = ''
 }
 
-// 將 AI 分析結果映射到問卷表單（根據問題文本智能判斷）
+// 將 AI 分析結果映射到問卷表單（使用 question_number 精確匹配）
 function mapAIResultToQuestionnaire(matchedQuestions: any[]) {
   matchedQuestions.forEach((q) => {
-    const questionText = q.question_text || ''
-    const answer = q.answer
+    const num = q.question_number
+    const answer = q.answer || ''
 
-    // 根據問題文本內容來判斷應該填入哪個欄位
-    if (questionText.includes('官網') || questionText.includes('FB')) {
-      // Q1: 官網/FB
-      // 判斷是否有官網或 FB
-      if (answer.includes('FB') || answer.includes('粉專') || answer.includes('粉絲頁') ||
-          answer.toLowerCase().includes('有') || answer.toLowerCase().includes('yes') ||
-          answer.match(/https?:\/\//)) {
-        questionnaireForm.q1_website = 'Y'
-        // 嘗試提取網址
-        const urlMatch = answer.match(/(https?:\/\/[^\s,，。]+)/)
-        if (urlMatch) {
-          questionnaireForm.q1_link = urlMatch[1]
-        }
-      } else if (answer.includes('無') || answer.includes('沒有') || answer.toLowerCase().includes('no')) {
-        questionnaireForm.q1_website = 'N'
-      }
-    } else if (questionText.includes('LINE')) {
-      // Q2: LINE 管理
-      if (answer.includes('LINE OA')) questionnaireForm.q2_line_type = 'LINE OA'
-      else if (answer.includes('LINE個人') || answer.includes('LINE')) questionnaireForm.q2_line_type = 'LINE個人'
-      else questionnaireForm.q2_line_type = 'No'
-    } else if (questionText.includes('公司') && questionText.includes('名稱')) {
-      // Q3: 公司名稱
-      questionnaireForm.q3_company_name = answer
-    } else if (questionText.includes('經營階段')) {
-      // Q4: 經營階段
-      if (answer.includes('個人戶')) questionnaireForm.q4_business_stage = 'a'
-      else if (answer.includes('準備成立')) questionnaireForm.q4_business_stage = 'b'
-      else if (answer.includes('剛成立')) questionnaireForm.q4_business_stage = 'c'
-      else if (answer.includes('數位升級')) questionnaireForm.q4_business_stage = 'd'
-    } else if (questionText.includes('背景')) {
-      // Q5: 公司背景
-      const backgrounds: string[] = []
-      if (answer.includes('仲介')) backgrounds.push('a')
-      if (answer.includes('建設')) backgrounds.push('b')
-      if (answer.includes('家族') || answer.includes('集團')) backgrounds.push('c')
-      if (answer.includes('裝修') || answer.includes('工程')) backgrounds.push('d')
-      if (answer.includes('包租代管') || answer.includes('創業')) backgrounds.push('e')
-      if (answer.includes('旅館') || answer.includes('短租')) backgrounds.push('f')
-      if (answer.includes('斜槓') || answer.includes('兼職')) backgrounds.push('g')
-      questionnaireForm.q5_background = backgrounds
-    } else if (questionText.includes('物件比例') || (questionText.includes('包租') && questionText.includes('代管') && !questionText.includes('發票'))) {
-      // Q6: 物件比例
-      questionnaireForm.q6_property_ratio = answer
-    } else if (questionText.includes('案場') || questionText.includes('規劃')) {
-      // Q7: 案場規劃
-      const types: string[] = []
-      if (answer.includes('共生宅')) types.push('a')
-      if (answer.includes('套雅房') || answer.includes('套房')) types.push('b')
-      if (answer.includes('整層')) types.push('c')
-      if (answer.includes('透套')) types.push('d')
-      if (answer.includes('共享辦公') || answer.includes('商務中心')) types.push('e')
-      questionnaireForm.q7_property_types = types
-    } else if (questionText.includes('分布') || questionText.includes('地點')) {
-      // Q8: 分布地點
-      questionnaireForm.q8_locations = answer
-    } else if (questionText.includes('社宅')) {
-      // Q9: 社宅
-      questionnaireForm.q9_social_housing = answer.includes('有') || answer.includes('是') ? 'Y' : 'N'
-    } else if (questionText.includes('痛點') || questionText.includes('難題')) {
-      // Q10: 主要痛點
-      questionnaireForm.q10_pain_points = answer
-    } else if (questionText.includes('擴大營運') || questionText.includes('新接案場')) {
-      // Q11: 規劃擴大營運
-      questionnaireForm.q11_expansion = answer.includes('有') || answer.includes('是') ? 'Y' : 'N'
-    } else if (questionText.includes('決策') && questionText.includes('目標')) {
-      // Q12: 公司/決策者目標
-      const goals: string[] = []
-      if (answer.includes('戶數增加')) goals.push('戶數增加')
-      if (answer.includes('人員異動')) goals.push('人員異動')
-      if (answer.includes('人力減少')) goals.push('人力減少')
-      questionnaireForm.q12_goals = goals
-    } else if (questionText.includes('組織人力') || questionText.includes('人力數據')) {
-      // Q13: 組織人力數據
-      // 提取物件數量
-      const propertyMatch = answer.match(/(\d+)\s*(?:間|戶|物件)/)
-      if (propertyMatch) questionnaireForm.q13_total_properties = propertyMatch[1]
-
-      // 提取人員數量（避免和物件數量混淆）
-      const staffMatch = answer.match(/(\d+)\s*(?:人|位|個人)/)
-      if (staffMatch && !answer.substring(answer.indexOf(staffMatch[0]) - 5, answer.indexOf(staffMatch[0])).includes('間')) {
-        questionnaireForm.q13_total_staff = staffMatch[1]
-      }
-
-      // 保存完整描述作為人員分工
-      questionnaireForm.q13_staff_division = answer
-    } else if (questionText.includes('帳務') || questionText.includes('金流')) {
-      // Q14: 帳務方式
-      if (answer.includes('紙本')) {
-        questionnaireForm.q14_accounting_method = '紙本'
-      } else if (answer.includes('外包')) {
-        questionnaireForm.q14_accounting_method = '外包'
-      } else if (answer.includes('系統')) {
-        questionnaireForm.q14_accounting_method = '系統'
-      }
-      // 保存完整回答作為詳細說明
-      questionnaireForm.q14_payment_details = answer
-    } else if (questionText.includes('大房東')) {
-      // Q15: 大房東數量
-      // 提取房東數量
-      const landlordMatch = answer.match(/(\d+)\s*(?:個|位|間)/)
-      if (landlordMatch) {
-        questionnaireForm.q15_landlord_count = landlordMatch[1]
-      } else {
-        questionnaireForm.q15_landlord_count = answer
-      }
-      // 判斷是否需要做損益表
-      questionnaireForm.q15_monthly_report = answer.includes('損益表') || answer.includes('報表')
-    } else if (questionText.includes('差額發票')) {
-      // Q16: 差額發票
-      questionnaireForm.q16_invoice_needed = answer.includes('有') || answer.includes('是') ? 'Y' : 'N'
-    } else if (questionText.includes('租客') && questionText.includes('取向')) {
-      // Q17: 租客取向
-      const types: string[] = []
-      if (answer.includes('高資產')) types.push('高資產')
-      if (answer.includes('中資產')) types.push('中資產')
-      if (answer.includes('低資產')) types.push('低資產')
-      questionnaireForm.q17_tenant_types = types
-    } else if (questionText.includes('外籍')) {
-      // Q18: 外籍租客
-      questionnaireForm.q18_foreign_tenants = answer.includes('有') || answer.includes('是') ? 'Y' : 'N'
-    } else if (questionText.includes('會計部門')) {
-      // Q19: 會計部門
-      if (answer.includes('有') || answer.includes('是') ||
-          answer.match(/\d+\s*(?:人|位)/) ||
-          answer.match(/[一二三四五六七八九十兩]+\s*(?:個)?(?:人|位)/)) {
-        questionnaireForm.q19_has_accounting = 'Y'
-        // 先嘗試提取阿拉伯數字
-        let staffMatch = answer.match(/(\d+)\s*(?:人|位)/)
-        if (staffMatch) {
-          questionnaireForm.q19_accounting_staff = staffMatch[1]
+    switch (num) {
+      case 1: // 官網/FB
+        if (answer.includes('無') || answer.includes('沒有') || answer.includes('沒') || answer.toLowerCase().includes('no')) {
+          questionnaireForm.q1_website = 'N'
         } else {
-          // 嘗試提取中文數字並轉換
-          const chineseMatch = answer.match(/(一|二|三|四|五|六|七|八|九|十|兩)\s*(?:個)?(?:人|位)/)
-          if (chineseMatch) {
-            const chineseToNumber = {'一': '1', '二': '2', '兩': '2', '三': '3', '四': '4', '五': '5', '六': '6', '七': '7', '八': '8', '九': '9', '十': '10'}
-            questionnaireForm.q19_accounting_staff = chineseToNumber[chineseMatch[1]] || chineseMatch[1]
+          questionnaireForm.q1_website = 'Y'
+          const urlMatch = answer.match(/(https?:\/\/[^\s,，。]+)/)
+          if (urlMatch) questionnaireForm.q1_link = urlMatch[1]
+        }
+        break
+
+      case 2: // LINE 管理
+        if (answer.includes('OA') || answer.includes('官方')) {
+          questionnaireForm.q2_line_type = 'LINE OA'
+        } else if (answer.includes('個人') || answer.includes('私人') || answer.includes('LINE') || answer.includes('line')) {
+          questionnaireForm.q2_line_type = 'LINE個人'
+        } else if (answer.includes('無') || answer.includes('沒') || answer.includes('否')) {
+          questionnaireForm.q2_line_type = 'No'
+        } else {
+          // 有提到就預設個人
+          questionnaireForm.q2_line_type = 'LINE個人'
+        }
+        break
+
+      case 3: // 公司名稱
+        questionnaireForm.q3_company_name = answer
+        break
+
+      case 4: // 經營階段
+        if (answer.includes('個人戶') || answer.includes('個人')) {
+          questionnaireForm.q4_business_stage = 'a'
+        } else if (answer.includes('準備成立') || answer.includes('籌備')) {
+          questionnaireForm.q4_business_stage = 'b'
+        } else if (answer.includes('剛成立') || answer.includes('新成立') || answer.includes('成立不久')) {
+          questionnaireForm.q4_business_stage = 'c'
+        } else if (answer.includes('數位升級') || answer.includes('升級') || answer.includes('擴大') ||
+                   answer.match(/\d+\s*年/) || answer.includes('規模')) {
+          // 經營多年 → 數位升級階段
+          questionnaireForm.q4_business_stage = 'd'
+        }
+        break
+
+      case 5: { // 公司背景
+        const backgrounds: string[] = []
+        if (answer.includes('仲介') || answer.includes('房仲')) backgrounds.push('a')
+        if (answer.includes('建設') || answer.includes('營造') || answer.includes('建商')) backgrounds.push('b')
+        if (answer.includes('家族') || answer.includes('集團')) backgrounds.push('c')
+        if (answer.includes('裝修') || answer.includes('工程') || answer.includes('裝潢')) backgrounds.push('d')
+        if (answer.includes('包租代管') || answer.includes('創業') || answer.includes('租屋') || answer.includes('租賃')) backgrounds.push('e')
+        if (answer.includes('旅館') || answer.includes('短租') || answer.includes('民宿') || answer.includes('日租')) backgrounds.push('f')
+        if (answer.includes('斜槓') || answer.includes('兼職') || answer.includes('副業')) backgrounds.push('g')
+        // 如果都沒匹配到但有答案，根據語意嘗試歸類
+        if (backgrounds.length === 0 && answer.length > 0) {
+          if (answer.includes('市場') || answer.includes('看好') || answer.includes('看準') || answer.includes('投入')) {
+            backgrounds.push('e') // 純包租代管/創業
           }
         }
-      } else if (answer.includes('無') || answer.includes('沒有') || answer.includes('否')) {
-        questionnaireForm.q19_has_accounting = 'N'
+        if (backgrounds.length > 0) questionnaireForm.q5_background = backgrounds
+        break
       }
-    } else if (questionText.includes('作業方式') || questionText.includes('協力系統')) {
-      // Q20: 作業方式
-      if (answer.includes('紙本')) {
-        questionnaireForm.q20_operation_method = '紙本'
-      } else if (answer.includes('系統')) {
-        questionnaireForm.q20_operation_method = '系統'
+
+      case 6: // 物件比例
+        questionnaireForm.q6_property_ratio = answer
+        break
+
+      case 7: { // 案場規劃
+        const propTypes: string[] = []
+        if (answer.includes('共生宅') || answer.includes('共生')) propTypes.push('a')
+        if (answer.includes('套雅房') || answer.includes('套房') || answer.includes('雅房') || answer.includes('宿舍')) propTypes.push('b')
+        if (answer.includes('整層') || answer.includes('整戶') || answer.includes('整棟')) propTypes.push('c')
+        if (answer.includes('透套') || answer.includes('透天')) propTypes.push('d')
+        if (answer.includes('共享辦公') || answer.includes('商務中心') || answer.includes('辦公')) propTypes.push('e')
+        if (propTypes.length > 0) questionnaireForm.q7_property_types = propTypes
+        break
       }
-      // 保存完整回答，可能包含其他系統資訊
-      questionnaireForm.q20_other_systems = answer
-    } else if (questionText.includes('官網') && (questionText.includes('需求') || questionText.includes('興趣') || questionText.includes('5000'))) {
-      // Q21: 官網需求
-      if (answer.includes('有興趣') || answer.includes('可以')) {
-        questionnaireForm.q21_website_interest = 'Y'
-      } else if (answer.includes('已有') || answer.includes('有官網')) {
-        questionnaireForm.q21_website_interest = '已有'
-      } else if (answer.includes('沒') || answer.includes('無')) {
-        questionnaireForm.q21_website_interest = 'N'
+
+      case 8: // 分布地點
+        questionnaireForm.q8_locations = answer
+        break
+
+      case 9: // 社宅
+        questionnaireForm.q9_social_housing =
+          (answer.includes('有') || answer.includes('是')) && !answer.includes('沒有') && !answer.includes('沒') ? 'Y' : 'N'
+        break
+
+      case 10: // 痛點
+        questionnaireForm.q10_pain_points = answer
+        break
+
+      case 11: // 擴大營運
+        questionnaireForm.q11_expansion =
+          (answer.includes('有') || answer.includes('是') || answer.includes('計畫') || answer.includes('打算')) ? 'Y' : 'N'
+        break
+
+      case 12: { // 決策者目標
+        const goals: string[] = []
+        if (answer.includes('戶數') || answer.includes('增加') || answer.includes('成長') || answer.includes('擴大')) goals.push('戶數增加')
+        if (answer.includes('人員異動') || answer.includes('人事') || answer.includes('換人')) goals.push('人員異動')
+        if (answer.includes('人力減少') || answer.includes('精簡') || answer.includes('省人') || answer.includes('自動化')) goals.push('人力減少')
+        if (goals.length > 0) questionnaireForm.q12_goals = goals
+        break
       }
-    } else if (questionText.includes('競品')) {
-      // Q22: 競品
-      const competitors: string[] = []
-      if (answer.includes('飛豬')) competitors.push('飛豬')
-      if (answer.includes('DDROOM')) competitors.push('DDROOM')
-      if (answer.includes('包管家')) competitors.push('包管家')
-      if (answer.includes('其他') && !competitors.length) competitors.push('其他')
-      questionnaireForm.q22_competitors = competitors
-      // 如果有提到具體的其他系統名稱，記錄下來
-      if (answer.length > 0) {
-        questionnaireForm.q22_other_competitor = answer
+
+      case 13: { // 組織人力數據
+        const propertyMatch = answer.match(/(\d+)\s*(?:間|戶|物件|棟)/)
+        if (propertyMatch) questionnaireForm.q13_total_properties = propertyMatch[1]
+
+        // 提取人員數量 — 找「X人/位/個人」但避免跟物件數混淆
+        const allNumbers = [...answer.matchAll(/(\d+)\s*(?:人|位|個人|名)/g)]
+        if (allNumbers.length > 0) {
+          // 取第一個匹配的人數
+          questionnaireForm.q13_total_staff = allNumbers[0][1]
+        }
+
+        questionnaireForm.q13_staff_division = answer
+        break
       }
-    } else if (questionText.includes('拉群') || questionText.includes('唐三藏')) {
-      // Q23: LINE 拉群/唐三藏
-      questionnaireForm.q23_line_group = answer.includes('有') || answer.includes('是') ? 'Y' : 'N'
-    } else if (questionText.includes('決策人員') && !questionText.includes('目標')) {
-      // Q24: 公司決策人員
-      questionnaireForm.q24_decision_makers = answer
+
+      case 14: // 帳務方式
+        if (answer.includes('紙本') || answer.includes('手寫')) {
+          questionnaireForm.q14_accounting_method = '紙本'
+        } else if (answer.includes('外包') || answer.includes('記帳士') || answer.includes('會計師')) {
+          questionnaireForm.q14_accounting_method = '外包'
+        } else if (answer.includes('系統') || answer.includes('軟體') || answer.includes('ERP')) {
+          questionnaireForm.q14_accounting_method = '系統'
+        }
+        questionnaireForm.q14_payment_details = answer
+        break
+
+      case 15: { // 大房東數量
+        const landlordMatch = answer.match(/(\d+)/)
+        if (landlordMatch) {
+          questionnaireForm.q15_landlord_count = landlordMatch[1]
+        } else {
+          questionnaireForm.q15_landlord_count = answer
+        }
+        questionnaireForm.q15_monthly_report = answer.includes('損益表') || answer.includes('報表') || answer.includes('月報')
+        break
+      }
+
+      case 16: // 差額發票
+        questionnaireForm.q16_invoice_needed =
+          (answer.includes('有') || answer.includes('是') || answer.includes('需要')) ? 'Y' : 'N'
+        break
+
+      case 17: { // 租客取向
+        const tenantTypes: string[] = []
+        if (answer.includes('高資產') || answer.includes('高端') || answer.includes('豪宅')) tenantTypes.push('高資產')
+        if (answer.includes('中資產') || answer.includes('一般') || answer.includes('上班族')) tenantTypes.push('中資產')
+        if (answer.includes('低資產') || answer.includes('學生') || answer.includes('弱勢') || answer.includes('低收')) tenantTypes.push('低資產')
+        if (tenantTypes.length > 0) questionnaireForm.q17_tenant_types = tenantTypes
+        break
+      }
+
+      case 18: // 外籍租客
+        questionnaireForm.q18_foreign_tenants =
+          (answer.includes('有') || answer.includes('是') || answer.includes('外籍') || answer.includes('外國')) ? 'Y' : 'N'
+        break
+
+      case 19: { // 會計部門
+        const hasAccounting = answer.includes('有') || answer.includes('是') ||
+          answer.match(/\d+\s*(?:人|位|個)/) ||
+          answer.match(/[一二三四五六七八九十兩]+\s*(?:個)?(?:人|位)/)
+        const noAccounting = answer.includes('無') || answer.includes('沒有') || answer.includes('沒') || answer.includes('否')
+
+        if (noAccounting && !hasAccounting) {
+          questionnaireForm.q19_has_accounting = 'N'
+        } else if (hasAccounting) {
+          questionnaireForm.q19_has_accounting = 'Y'
+          const staffNum = answer.match(/(\d+)\s*(?:人|位|個)/)
+          if (staffNum) {
+            questionnaireForm.q19_accounting_staff = staffNum[1]
+          } else {
+            const chineseNum: Record<string, string> = {'一':'1','二':'2','兩':'2','三':'3','四':'4','五':'5','六':'6','七':'7','八':'8','九':'9','十':'10'}
+            const chMatch = answer.match(/(一|二|三|四|五|六|七|八|九|十|兩)\s*(?:個)?(?:人|位)/)
+            if (chMatch) questionnaireForm.q19_accounting_staff = chineseNum[chMatch[1]] || chMatch[1]
+          }
+        }
+        break
+      }
+
+      case 20: // 作業方式
+        if (answer.includes('紙本') || answer.includes('手寫') || answer.includes('Excel') || answer.includes('excel')) {
+          questionnaireForm.q20_operation_method = '紙本'
+        } else if (answer.includes('系統') || answer.includes('軟體') || answer.includes('ERP') || answer.includes('app')) {
+          questionnaireForm.q20_operation_method = '系統'
+        }
+        questionnaireForm.q20_other_systems = answer
+        break
+
+      case 21: // 官網需求
+        if (answer.includes('有興趣') || answer.includes('可以') || answer.includes('想要')) {
+          questionnaireForm.q21_website_interest = 'Y'
+        } else if (answer.includes('已有') || answer.includes('有官網') || answer.includes('有了')) {
+          questionnaireForm.q21_website_interest = '已有'
+        } else if (answer.includes('沒') || answer.includes('無') || answer.includes('不需要') || answer.includes('不用')) {
+          questionnaireForm.q21_website_interest = 'N'
+        }
+        break
+
+      case 22: { // 競品
+        const competitors: string[] = []
+        if (answer.includes('飛豬')) competitors.push('飛豬')
+        if (answer.includes('DDROOM') || answer.includes('ddroom')) competitors.push('DDROOM')
+        if (answer.includes('包管家')) competitors.push('包管家')
+        if (competitors.length === 0 && answer.length > 0 && !answer.includes('無') && !answer.includes('沒')) {
+          competitors.push('其他')
+        }
+        if (competitors.length > 0) questionnaireForm.q22_competitors = competitors
+        if (answer.length > 0) questionnaireForm.q22_other_competitor = answer
+        break
+      }
+
+      case 23: // LINE 拉群/唐三藏
+        questionnaireForm.q23_line_group =
+          (answer.includes('有') || answer.includes('是')) && !answer.includes('沒') ? 'Y' : 'N'
+        break
+
+      case 24: // 決策人員
+        questionnaireForm.q24_decision_makers = answer
+        break
     }
   })
 }
 
 // 填入客戶基本資訊
 function fillCustomerInfo(customerInfo: any) {
-  // 如果有公司名稱，填入問卷
-  if (customerInfo.company_name) {
+  // 只在問卷欄位為空時才填入，避免覆蓋 AI 匹配的結果
+  if (customerInfo.company_name && !questionnaireForm.q3_company_name) {
     questionnaireForm.q3_company_name = customerInfo.company_name
   }
 
-  // 如果有物件數量，填入對應欄位 (Q13)
-  if (customerInfo.property_count) {
+  if (customerInfo.property_count && !questionnaireForm.q13_total_properties) {
     questionnaireForm.q13_total_properties = customerInfo.property_count.toString()
   }
 
-  // 如果有人員數量 (Q13)
-  if (customerInfo.staff_count) {
+  if (customerInfo.staff_count && !questionnaireForm.q13_total_staff) {
     questionnaireForm.q13_total_staff = customerInfo.staff_count.toString()
   }
 
-  // 如果有業務類型
-  if (customerInfo.business_type) {
+  if (customerInfo.business_type && !questionnaireForm.q6_property_ratio) {
     questionnaireForm.q6_property_ratio = customerInfo.business_type
   }
 
-  // 如果有痛點
-  if (customerInfo.pain_points && customerInfo.pain_points.length > 0) {
+  if (customerInfo.pain_points && customerInfo.pain_points.length > 0 && !questionnaireForm.q10_pain_points) {
     questionnaireForm.q10_pain_points = customerInfo.pain_points.join('、')
   }
 }
@@ -1349,9 +1386,15 @@ function fillCustomerInfo(customerInfo: any) {
   overflow-y: auto;
 }
 
+:deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+
 :deep(.el-form-item__label) {
   font-weight: 500;
   color: #606266;
+  line-height: 1.5;
+  padding-bottom: 4px;
 }
 
 :deep(.el-divider__text) {
@@ -1362,12 +1405,8 @@ function fillCustomerInfo(customerInfo: any) {
 :deep(.el-checkbox-group),
 :deep(.el-radio-group) {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-:deep(.el-checkbox),
-:deep(.el-radio) {
-  margin-right: 0;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 4px;
 }
 </style>

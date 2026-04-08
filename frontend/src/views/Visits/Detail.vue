@@ -370,6 +370,46 @@ function getVisitStatusLabel(status: string): string {
   return labels[status] || status
 }
 
+// 值代碼對應表
+const valueMaps: Record<string, Record<string, string>> = {
+  q4_business_stage: {
+    a: '個人戶',
+    b: '準備成立公司',
+    c: '剛成立公司',
+    d: '物件量增加想數位升級',
+  },
+  q5_background: {
+    a: '仲介',
+    b: '建設',
+    c: '家族/集團',
+    d: '室內裝修/工程',
+    e: '純包租代管/創業',
+    f: '旅館短租起家',
+    g: '斜槓兼職',
+  },
+  q7_property_types: {
+    a: '共生宅',
+    b: '套雅房',
+    c: '整層',
+    d: '透套',
+    e: '共享辦公室&商務中心',
+  },
+  q14_accounting_method: {
+    紙本: '紙本',
+    系統: '系統',
+    外包: '外包會計人員',
+  },
+  q20_operation_method: {
+    紙本: '紙本',
+    系統: '系統',
+  },
+  q21_website_interest: {
+    Y: '有興趣（5000元形象官網）',
+    N: '無',
+    已有: '已有官網',
+  },
+}
+
 // 格式化問題值
 function formatQuestionValue(key: string, value: any): string {
   // 處理空值
@@ -382,85 +422,66 @@ function formatQuestionValue(key: string, value: any): string {
     return value ? '是' : '否'
   }
 
-  // 處理陣列
+  // 處理陣列（將代碼轉為可讀文字）
   if (Array.isArray(value)) {
-    return value.length > 0 ? value.join('、') : '-'
+    if (value.length === 0) return '-'
+    const map = valueMaps[key]
+    if (map) {
+      return value.map(v => map[v] || v).join('、')
+    }
+    return value.join('、')
+  }
+
+  // 處理有對應表的代碼值
+  if (valueMaps[key] && valueMaps[key][value]) {
+    return valueMaps[key][value]
   }
 
   // 處理 Y/N 值
-  if (value === 'Y') {
-    return '有'
-  }
-  if (value === 'N') {
-    return '無'
-  }
+  if (value === 'Y') return '有'
+  if (value === 'N') return '無'
 
   // 其他直接顯示
   return String(value)
 }
 
-// 問題標籤（對齊 Excel 記錄表 24 問）
+// 問題標籤（對齊問卷 24 問）
 function getQuestionLabel(key: string): string {
   const labels: Record<string, string> = {
-    // 基本資訊 (1-12)
-    // Q1 - 官網/FB
+    // 基本資訊 (1-10)
     q1_website: 'Q1. 公司官網/FB',
     q1_link: 'Q1. 官網/FB 連結',
-    // Q2 - LINE
     q2_line_type: 'Q2. LINE 管理租客',
-    // Q3 - 公司名稱
     q3_company_name: 'Q3. 公司/品牌名稱',
-    // Q4 - 經營階段
     q4_business_stage: 'Q4. 經營階段',
-    // Q5 - 公司背景
     q5_background: 'Q5. 公司背景',
-    // Q6 - 物件比例
     q6_property_ratio: 'Q6. 物件比例（包租/代管）',
-    // Q7 - 案場類型
     q7_property_types: 'Q7. 案場類型',
-    // Q8 - 分布地點
     q8_locations: 'Q8. 公司分布地點',
-    // Q9 - 社會住宅
-    q9_social_housing: 'Q9. 社會住宅',
-    // Q10 - 痛點
+    q9_social_housing: 'Q9. 是否經營社宅',
     q10_pain_points: 'Q10. 目前痛點',
-    // Q11 - LINE 拉群/唐三藏
-    q11_line_group: 'Q11. LINE 拉群/唐三藏',
-    // Q12 - 公司決策人員
-    q12_decision_makers: 'Q12. 公司決策人員',
-
-    // 進階資訊 (13-24)
-    // Q13 - 擴大規模
-    q13_expansion: 'Q13. 是否擴大規模',
-    // Q14 - 公司目標
-    q14_goals: 'Q14. 公司目標',
-    // Q15 - 組織人力
-    q15_total_properties: 'Q15. 總戶數',
-    q15_total_staff: 'Q15. 總人數',
-    q15_staff_division: 'Q15. 人員分工',
-    // Q16 - 帳務方式
-    q16_accounting_method: 'Q16. 帳務方式',
-    q16_payment_details: 'Q16. 付款細節',
-    // Q17 - 大房東
-    q17_landlord_count: 'Q17. 大房東數量',
-    q17_monthly_report: 'Q17. 需要做損益表',
-    // Q18 - 差額發票
-    q18_invoice_needed: 'Q18. 差額發票（包租）',
-    // Q19 - 租客取向
-    q19_tenant_types: 'Q19. 租客取向',
-    // Q20 - 外籍租客
-    q20_foreign_tenants: 'Q20. 外籍租客',
-    // Q21 - 會計部門
-    q21_has_accounting: 'Q21. 是否有會計部門',
-    q21_accounting_staff: 'Q21. 會計人數',
-    // Q22 - 作業方式
-    q22_operation_method: 'Q22. 作業方式',
-    q22_other_systems: 'Q22. 其他協力系統',
-    // Q23 - 官網需求
-    q23_website_interest: 'Q23. 官網需求',
-    // Q24 - 競品
-    q24_competitors: 'Q24. 競品',
-    q24_other_competitor: 'Q24. 其他競品',
+    // 進階資訊 (11-24)
+    q11_expansion: 'Q11. 是否規劃擴大營運',
+    q12_goals: 'Q12. 公司/決策者目標',
+    q13_total_properties: 'Q13. 總戶數',
+    q13_total_staff: 'Q13. 總人數',
+    q13_staff_division: 'Q13. 人員分工',
+    q14_accounting_method: 'Q14. 帳務方式',
+    q14_payment_details: 'Q14. 收帳/金流細節',
+    q15_landlord_count: 'Q15. 大房東數量',
+    q15_monthly_report: 'Q15. 需做損益表',
+    q16_invoice_needed: 'Q16. 差額發票（包租）',
+    q17_tenant_types: 'Q17. 租客取向',
+    q18_foreign_tenants: 'Q18. 外籍租客',
+    q19_has_accounting: 'Q19. 是否有會計部門',
+    q19_accounting_staff: 'Q19. 會計人數',
+    q20_operation_method: 'Q20. 作業方式',
+    q20_other_systems: 'Q20. 其他協力系統',
+    q21_website_interest: 'Q21. 官網需求',
+    q22_competitors: 'Q22. 競品',
+    q22_other_competitor: 'Q22. 其他競品說明',
+    q23_line_group: 'Q23. LINE 拉群/唐三藏',
+    q24_decision_makers: 'Q24. 公司決策人員',
   }
   return labels[key] || `問題 ${key}`
 }
